@@ -29,6 +29,8 @@ The starter code in this repository builds upon the previous exercise's ([pokede
 
 * create the ability to edit and delete pokemon from the json file
 
+* add boostrap to your app. Create a layout component file and put the bootstrap footer and navbar inside the layout file.
+
 * Add a "Sort by name" button to the homepage (`/` route) that when clicked, sends a GET request with a query parameter specifying "?sortby=name"
   * Try to implement the button as an element within a `form` tag with `action="/"` and `method="GET"` - so you don't have to write an AJAX request in JavaScript
 
