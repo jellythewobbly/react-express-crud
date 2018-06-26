@@ -1,16 +1,24 @@
 const express = require('express');
 const jsonfile = require('jsonfile');
+const reactEngine = require('express-react-views').createEngine();
+
 
 const FILE = 'pokedex.json';
+const FILE2 = 'pokedexcopy.json';
 
-/**
- * ===================================
- * Configurations and set up
- * ===================================
- */
-
-// Init express app
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: true }));
+
+app.engine('jsx', reactEngine);
+// this tells express where to look for the view files
+app.set('views', __dirname + '/views');
+
+// this line sets react to be the default view engine
+app.set('view engine', 'jsx');
+
 
 /**
  * ===================================
@@ -18,16 +26,25 @@ const app = express();
  * ===================================
  */
 
+app.get('/', (request, response) => {
+
+  jsonfile.readFile(FILE, (err, obj) => {
+    let pokemonObj = obj.pokemon;
+    const context = {
+    all_Pokemon: pokemonObj
+    };
+
+    response.render('home', context);
+  });
+});
+
+
 app.get('/:id', (request, response) => {
 
-  // get json from specified file
   jsonfile.readFile(FILE, (err, obj) => {
-    // obj is the object from the pokedex json file
-    // extract input data from request
+
     let inputId = request.params.id;
 
-    // find pokemon by id from the pokedex json file
-    // (note: find() is a built-in method of JavaScript arrays)
     let pokemon = obj.pokemon.find((currentPokemon) => {
       return currentPokemon.id === parseInt(inputId, 10);
     });
@@ -38,16 +55,41 @@ app.get('/:id', (request, response) => {
       response.status(404);
       response.send("not found");
     } else {
-
-      response.send(pokemon);
+      
+      response.render('pokemonById', pokemon);
     }
   });
 });
 
-app.get('/', (request, response) => {
-  response.send("yay");
+app.get('/pokemon/new', (req, res) => {
+  res.render('form');
 });
 
+
+app.post('/pokemon', (req, res) => {
+  
+  let newPokemon = req.body;
+  res.render('formSubmit', newPokemon);
+
+  jsonfile.readFile(FILE, (err, obj) => {
+    let pokemonObj = obj.pokemon;
+
+    let newPokemon = {};
+    newPokemon["id"] = req.body.id;
+    newPokemon["num"] = req.body.num;
+    newPokemon["name"] = req.body.name;
+    newPokemon["image"] = req.body.img;
+    newPokemon["height"] = parseInt(req.body.height)/100 + ' m';
+    newPokemon["weight"] = req.body.weight + ' kg';
+    
+    pokemonObj.push(newPokemon);
+
+    jsonfile.writeFile(FILE2, pokemonObj, function (err) {
+    console.error(err)
+    });
+
+  })
+})
 /**
  * ===================================
  * Listen to requests on port 3000
